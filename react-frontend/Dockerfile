@@ -1,12 +1,18 @@
-FROM node:alpine as build
+FROM node:alpine
+
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install --production --no-cache
+COPY . /app
 
-COPY . .
-RUN npm run build
+RUN addgroup -S reactgroup && adduser -S reactuser -G reactgroup
 
-FROM alpine:latest
-WORKDIR /usr/share/app
-COPY --from=build /app/build .
+RUN chown reactuser:reactgroup /app
+
+USER reactuser
+
+RUN npm ci && \
+    npm cache clean --force
+
+EXPOSE 3000
+
+ENTRYPOINT ["npm", "start"]

@@ -1,11 +1,16 @@
-FROM nginx:alpine
+FROM alpine:3.21
 
-COPY conf.d /etc/nginx/conf.d
+RUN apk add --no-cache nginx && \
+    mkdir -p /run/nginx && \
+    mkdir -p /var/log/nginx && \
+    mkdir -p /var/lib/nginx
 
-COPY entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN addgroup -S nginxgroup && adduser -S nginxuser -G nginxgroup
 
-RUN mkdir -p /var/cache/nginx/client_temp && chown -R nginx:nginx /var/cache/nginx
+RUN chown -R nginxuser:nginxgroup /var/lib/nginx /var/log/nginx /run/nginx
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 80
+
+USER nginxuser
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
